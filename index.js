@@ -1,54 +1,42 @@
 'use strict';
+import * as DP from "./dataProcessing.js";
+import {mqttOptions, socketIOPort, loggingLevel} from "./params.js";
 
-const fs = require('fs');
-const app = require('express')();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
-const mqtt = require('mqtt');
-const trilat = require('trilat');
+import mqtt from "mqtt";
+import fs from "fs";
+import express from "express";
+import {Server} from "http";
+import socket from "socket.io";
+import log4js from "log4js";
 
-let mqttOptions = {
-    port: 1883,
-    host: 'mqtt://192.168.1.38'
-};
-let client = mqtt.connect(mqttOptions.host, mqttOptions);
+const logger = log4js.getLogger();
+logger.level = loggingLevel;
+
+const app = express();
+const server = Server(app);
+const io = socket(server);
+server.listen(socketIOPort);
+
+const beaconLocations = JSON.parse(fs.readFileSync('configs/beaconLocations_config.json', 'utf8'));
+const webUIConfiguration = JSON.parse(fs.readFileSync('configs/webUI_config.json', 'utf8'));
+const client = mqtt.connect(mqttOptions.host, mqttOptions);
 
 client.on('connect', function () {
     client.subscribe('#');
 })
 
-const beaconLocations = JSON.parse(fs.readFileSync('configs/beaconLocations_config.json', 'utf8'));
-
-function processLocationData(jsonLocData) {
-    const inputArrForTrilat = [];
-    for (const key in jsonLocData)
-        inputArrForTrilat.push([beaconLocations[key][0], beaconLocations[key][1], jsonLocData[key]])
-    return trilat(inputArrForTrilat)
-}
-
-
-server.listen(8090);
-const webUIConfiguration = JSON.parse(fs.readFileSync('configs/webUI_config.json', 'utf8'));
 io.on('connection', (socket) => {
-
-    function sendData(deviceId, coords) {
-        socket.emit('data', {'deviceId': deviceId, 'coords': coords})
-    }
-
-    function sendAlarm(deviceId) {
-        socket.emit('alarm', deviceId)
-    }
-
-
     client.on('message', function (topic, message) {
         if (topic.endsWith("location_data"))
-            sendData(topic.split('/')[0], processLocationData(JSON.parse(message.toString())));
+            DP.sendLocationData(socket, DP.getDeviceId(topic), DP.processLocationData(beaconLocations, JSON.parse(message.toString())));
+        if (topic.endsWith("sensor_data")) {
+            const dId = DP.getDeviceId(topic);
+            DP.sendSensorData(socket, dId, DP.processSensorData(socket, dId, JSON.parse(message.toString())));
+        }
     })
-
-    sendAlarm("dsffs")
-    console.log('New connection from address ' + socket.request.connection.remoteAddress +
-        " (port " + socket.request.connection.remotePort + ")");
     socket.emit('config', webUIConfiguration);
+    logger.debug('New connection from WebUI: address ' + socket.request.connection.remoteAddress +
+        " port " + socket.request.connection.remotePort);
     socket.on('isSwimmingAllowedChangeEvent', (data) => {
         client.publish('isSwimmingAllowed', data)
     });
