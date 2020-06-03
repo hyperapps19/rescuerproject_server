@@ -24,20 +24,21 @@ const client = mqtt.connect(mqttOptions.host, mqttOptions);
 client.on('connect', function () {
     client.subscribe('#');
 })
-
+client.on('message', function (topic, message) {
+    if (topic.endsWith("location_data"))
+        DP.sendLocationData(socket, DP.getDeviceId(topic), DP.processLocationData(beaconLocations, JSON.parse(message.toString())));
+    if (topic.endsWith("sensor_data")) {
+        const dId = DP.getDeviceId(topic);
+        DP.sendSensorData(socket, dId, DP.processSensorData(socket, dId, JSON.parse(message.toString())));
+    }
+})
 io.on('connection', (socket) => {
-    client.on('message', function (topic, message) {
-        if (topic.endsWith("location_data"))
-            DP.sendLocationData(socket, DP.getDeviceId(topic), DP.processLocationData(beaconLocations, JSON.parse(message.toString())));
-        if (topic.endsWith("sensor_data")) {
-            const dId = DP.getDeviceId(topic);
-            DP.sendSensorData(socket, dId, DP.processSensorData(socket, dId, JSON.parse(message.toString())));
-        }
-    })
     socket.emit('config', webUIConfiguration);
     logger.debug('New connection from WebUI: address ' + socket.request.connection.remoteAddress +
         " port " + socket.request.connection.remotePort);
     socket.on('isSwimmingAllowedChangeEvent', (data) => {
         client.publish('isSwimmingAllowed', data)
+        logger.debug('isSwimmingAllowed change: new value = ' + data);
     });
+    //DP.sendAlarm(socket, "yhaaaaa")
 });

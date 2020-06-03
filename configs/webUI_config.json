@@ -1,9 +1,9 @@
 {
   "mapboxAccessToken": "pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
   "style": "mapbox://styles/mapbox/streets-v10",
-  "center": [39.9716040485082, 43.3906207439818],
-  "zoom": 15.7,
+  "center": [39.972910072636864, 43.39290866063567],
+  "zoom": 17.3,
   "bearing": 220,
-  "graticuleInterval": 0.002,
+  "graticuleInterval": 0.1,
   "rescuerBaseCoords": [39.97389467017058, 43.3940020837648]
 }

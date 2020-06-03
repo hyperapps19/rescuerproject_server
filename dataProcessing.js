@@ -17,7 +17,7 @@ export function sendSensorData(socket, deviceId, data) {
 }
 
 export function sendAlarm(socket, deviceId) {
-    socket.emit('alarm', deviceId)
+    socket.emit('alarm', {'deviceId': deviceId})
 }
 
 export function addNewDataToSample(sample, data) {
