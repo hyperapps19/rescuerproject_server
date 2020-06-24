@@ -3,8 +3,11 @@ import * as Params from "./params.js";
 
 export function processLocationData(beaconLocations, jsonLocData) {
     const inputArrForTrilat = [];
-    for (const key in jsonLocData)
+    for (const key in jsonLocData.keys()) {
+        console.log(key)
         inputArrForTrilat.push([beaconLocations[key][0], beaconLocations[key][1], jsonLocData[key]])
+    }
+    console.log(inputArrForTrilat)
     return trilat(inputArrForTrilat)
 }
 

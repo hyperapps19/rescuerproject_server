@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "log4js": "^6.3.0",
+    "microtime": "^3.0.0",
     "mqtt": "^3.0.0",
     "socket.io": "^2.3.0",
     "trilat": "^1.0.0"
